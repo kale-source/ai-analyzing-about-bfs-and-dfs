@@ -1,0 +1,2 @@
+# Homework - BFS/DFS maze performance (time & memory charts)
+matplotlib>=3.5.0

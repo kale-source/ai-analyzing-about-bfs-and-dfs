@@ -1,126 +1,98 @@
+ou execute o notebook diretamente (ex.: conversão para script) se preferir.
 **Projeto: Análise de BFS vs DFS em Labirintos**
-Este repositório contém um notebook que gera labirintos aleatórios e compara o desempenho (tempo e uso de memória) dos algoritmos de busca Breadth-First Search (BFS) e Depth-First Search (DFS).
+
+Este repositório contém notebooks que geram labirintos aleatórios e comparam o desempenho (tempo e uso de memória) dos algoritmos de busca Breadth-First Search (BFS) e Depth-First Search (DFS).
+
+**Alterações recentes**
+- O notebook de visualização foi atualizado para tornar os plots mais robustos:
+	- aceita tanto `df_resultados` (pandas DataFrame) quanto `resultados` (lista de dicionários);
+	- usa a coluna `Tamanho` como eixo-x quando disponível;
+	- normaliza séries de forma segura (proteção contra divisão por zero e valores constantes);
+	- converte valores para `float` antes de normalizar para evitar erros com strings formatadas.
+
 **Arquivos principais**
-- **`Homework - Answer/homework.ipynb`**: Notebook principal com a implementação, medições e gráficos.
-- **`requirements.txt`**: Dependências (ex.: `matplotlib`).
-**Visão geral — como funciona**
-O notebook executa os seguintes passos principais:
+- `Homework - Answer/Atividade_IA_Labirinto.ipynb`: Notebook principal com geração de labirintos, medições e gráficos (contém as melhorias de plot descritas acima).
+- `requirements.txt`: Dependências mínimas para executar os notebooks.
+
+**Visão geral — fluxo do notebook**
 1) Geração do labirinto
-- Função: `gerar_labirinto(linhas, colunas)`.
-- Abordagem: backtracking recursivo que começa em (1,1) e "cava" caminhos em passos de duas células para manter paredes estruturadas; a célula intermediária é aberta quando um movimento é feito.
-- Dimensões ímpares: a função ajusta `linhas`/`colunas` para ímpar, garantindo bordas de parede.
-- Convenção de símbolos: `#` (parede), `.` (caminho), `S` (início), `G` (objetivo).
-2) Definição de vizinhos
-- Função: `neighbors(pos, grid)` retorna vizinhos válidos (não paredes). O notebook inclui diagonais por padrão (até 8 vizinhos). Mudar para apenas movimentos ortogonais é simples: use apenas os deslocamentos `(-1,0),(1,0),(0,-1),(0,1)`.
+- Função: `gerar_labirinto(linhas, colunas)` (backtracking recursivo). Ajusta dimensões para ímpar e usa `#`/`.`/`S`/`G`.
+2) Vizinhos
+- Função: `neighbors(pos, grid)` retorna vizinhos válidos. O notebook atual inclui diagonais por padrão; é simples desativar diagonais removendo deslocamentos diagonais.
 3) Algoritmos de busca
-- `bfs_grid(grid, start, goal)`: usa `deque` e `visited` para BFS; mantém `parent` para reconstrução do caminho.
-- `dfs_grid(grid, start, goal)`: usa uma pilha (LIFO) para DFS; também registra `parent`.
-- Reconstrução: `reconstruct_path_grid(parent, start, goal)` percorre `parent` de `goal` até `start` e inverte a lista.
+- `bfs_grid(grid, start, goal)` e `dfs_grid(grid, start, goal)` com `parent` para reconstrução de caminho.
 4) Medições
-- Tempo: `time.perf_counter()` em `get_bfs_time`/`get_dfs_time`.
-- Memória: `tracemalloc` é usado para capturar o pico de memória; `gc.collect()` é chamado antes para reduzir ruído.
+- Tempo com `time.perf_counter()` (convertido para ms).
+- Memória com `tracemalloc` (pico em KB). `gc.collect()` é chamado antes das medições de memória.
 5) Experimentos e visualização
-- O notebook cria labirintos de tamanhos crescentes, coleta tempos e picos de memória para cada execução e plota séries com `matplotlib`.
-**Trechos úteis**
-- Gerar labirinto e localizar `S` e `G`:
-```
-maze = gerar_labirinto(15, 21)
-start = find_char(maze, 'S')
-goal = find_char(maze, 'G')
-```
-- Executar buscas:
-```
-found_bfs, path_bfs = bfs_grid(maze, start, goal)
-found_dfs, path_dfs = dfs_grid(maze, start, goal)
-```
-- Medir memória (exemplo interno):
-```
-gc.collect()
-tm.start()
-bfs_grid(maze, start, goal)
-current, peak = tm.get_traced_memory()
-tm.stop()
-peak_kb = peak / 1024
-```
-**Complexidade (resumo)**
-- BFS: tempo O(V+E), espaço O(V) (fila + visited + parent).
-- DFS: tempo O(V+E), espaço O(V) no pior caso (pilha/recursão).
-- Observação: ao incluir diagonais, o fator constante aumenta (até 8 vizinhos por nó).
+- Gera labirintos de tamanhos crescentes, coleta tempos e picos de memória, monta `df_resultados` e plota comparações normalizadas com curvas teóricas (O(n), O(n log n), O(n²)).
+
 **Como executar**
 1. Criar e ativar ambiente virtual e instalar dependências:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install pandas numpy
 ```
+Observação: `pandas` e `numpy` são usados no notebook e podem não estar listados no `requirements.txt`; instale-os se necessário.
+
 2. Abrir o notebook:
 ```bash
 jupyter lab
 ```
-3. Ou converter para script e executar:
+
+3. Alternativa — converter para script e executar:
 ```bash
-jupyter nbconvert --to script "Homework - Answer/homework.ipynb"
-python "Homework - Answer/homework.py"
+jupyter nbconvert --to script "Homework - Answer/Atividade_IA_Labirinto.ipynb"
+python "Homework - Answer/Atividade_IA_Labirinto.py"
 ```
-**Boas práticas e sugestões**
+
+**Notas sobre plots e dados**
+- Se os valores em `df_resultados` estiverem formatados como strings (ex.: "12.34 ms"), converta para `float` antes de construir os gráficos.
+- A normalização usada nos gráficos divide pela primeira entrada de cada série; o código atual protege contra zeros e séries constantes.
+
+**Como os gráficos de comparação (Big O) são gerados**
+
+- Eixo X (tamanhos): o eixo X representa o tamanho característico do problema. No notebook esse valor vem da coluna `Tamanho` (ex.: 25, 35, 45...). Se essa coluna não existir, os valores são gerados como uma sequência esperada (`[25 + i*15 for i in range(...) ]`).
+
+- Curvas teóricas: o notebook constrói três curvas teóricas (O(n), O(n log n), O(n²)) usando os mesmos valores de `Tamanho`. Por exemplo:
+	- O(n): vetor `n`
+	- O(n log n): vetor `n * log2(n)`
+	- O(n²): vetor `n**2`
+
+- Normalização: as curvas teóricas e os dados reais (tempo/memória) são normalizados para permitir comparação visual independentemente das unidades.
+	- Método aplicado: dividir cada série pelo seu primeiro valor (ou por um valor alternativo seguro quando o primeiro é zero), transformando a primeira entrada em 1.0 e escalando as demais relativamente.
+	- Por que: dessa forma vemos apenas o crescimento relativo da série com o aumento de `Tamanho`, o que facilita comparar o formato (crescimento linear, n log n, quadrático) sem que a escala absoluta (ms ou KB) atrapalhe.
+
+- Pré-processamento dos dados reais:
+	- Converter colunas como `BFS_Tempo_ms`, `DFS_Tempo_ms`, `BFS_Memoria_KB`, `DFS_Memoria_KB` para `float` antes da normalização.
+	- Remover sufixos formatados (ex.: " ms", " KB") caso existam — o notebook já inclui conversões quando necessário.
+
+- Proteção contra casos degenerados:
+	- Séries constantes (todos valores iguais) ou primeiro valor igual a zero: o código de normalização usa um denominador alternativo (máximo da série) ou 1.0 como fallback, evitando divisão por zero e resultados inválidos.
+
+- Plotagem final:
+	- Os dados normalizados (`bfs_norm`, `dfs_norm`) são plotados com marcadores (`o`, `s`) e cores distintas.
+	- As curvas teóricas (`o_n`, `o_n_log_n`, `o_n2`) são plotadas como linhas tracejadas para facilitar a comparação visual do formato (inclinação/curvatura).
+	- Legendas, rótulos e grade são adicionados para leitura clara.
+
+- Interpretação visual:
+	- Se a série real segue de perto a curva O(n), o crescimento relativo será semelhante à linha O(n).
+	- Se a série cresce mais rápido e curvar para cima, pode se aproximar de O(n²).
+	- Importante: esse é um diagnóstico visual para entender tendência (ordem de crescimento) — não substitui um ajuste numérico/regressão para estimar parâmetros assintóticos.
+
+- Sugestão para análise quantitativa opcional:
+	- Aplicar regressão em escala log-log (fit de forma log(y) ~ a + b * log(n)) para estimar o expoente b; b≈1 indica linear, b≈2 quadrático, b≈1·log→ ajuste para n log n requer transformação especial.
+
+
+**Boas práticas**
 - Use `random.seed(...)` para reproduzibilidade.
-- Execute várias repetições por tamanho e reporte média + desvio.
-- Para medições de memória isoladas, rodar cada execução em processo separado (ex.: `multiprocessing` ou subprocess) evita interferência do interpretador.
-**Próximos passos**
-- Posso extrair o código do notebook para `benchmarks.py` com argumentos CLI.
-- Posso adicionar opção para desativar movimentos diagonais e gerar CSVs de resultados.
-Diga qual melhoria prefere que eu implemente a seguir.
-**Projeto: Análise de BFS vs DFS em Labirintos**
+- Rode múltiplas repetições por tamanho e reporte média + desvio padrão.
+- Para medições de memória isoladas, executar cada teste em processo separado reduz interferência do interpretador.
 
-Este repositório contém um notebook que gera labirintos aleatórios e compara o desempenho (tempo e uso de memória) dos algoritmos de busca Breadth-First Search (BFS) e Depth-First Search (DFS).
+**Próximos passos sugeridos**
+- Extrair o código para um script `benchmarks.py` com argumentos CLI (tamanhos, repetições, desativar diagonais).
+- Gerar e salvar CSV com `df_resultados` para análises posteriores.
 
-**Arquivos principais**
-- **Homework - Answer/homework.ipynb**: Notebook principal que implementa a geração de labirintos, as funções de busca (BFS e DFS), medidas de tempo/memória e os gráficos de comparação.
-- **requirements.txt**: Dependências mínimas necessárias para gerar os gráficos.
-
-**Descrição resumida**
-- O notebook gera labirintos usando um algoritmo de backtracking recursivo (labirintos com paredes `#`, caminhos `.`, início `S` e objetivo `G`).
-- Implementa `bfs_grid` e `dfs_grid` para buscar caminhos no grid, além de funções auxiliares para calcular vizinhos válidos e reconstruir caminhos.
-- Mede tempo de execução com `time.perf_counter()` e uso de memória com `tracemalloc` (pico em KB).
-- Gera gráficos de comparação de tempo e memória entre BFS e DFS para labirintos de tamanhos crescentes.
-
-**Principais funções (no notebook)**
-- **`gerar_labirinto(linhas, colunas)`**: Gera um labirinto dinâmico (matriz de caracteres).
-- **`neighbors(pos, grid)`**: Retorna vizinhos válidos (inclui diagonais) que não são paredes.
-- **`bfs_grid(grid, start, goal)`**: Busca em largura (BFS) retornando se encontrou e o caminho.
-- **`dfs_grid(grid, start, goal)`**: Busca em profundidade (DFS) retornando se encontrou e o caminho.
-- **`get_bfs_time`, `get_dfs_time`**: Medem tempos de execução.
-- **`get_bfs_memory`, `get_dfs_memory`**: Medem pico de memória usando `tracemalloc`.
-
-**Como executar**
-1. Crie um ambiente Python (recomendado) e instale dependências:
-
-```
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-2. Abra e execute o notebook com Jupyter Lab/Notebook:
-
-```
-jupyter lab
-```
-
-ou execute o notebook diretamente (ex.: conversão para script) se preferir.
-
-**Saídas esperadas**
-- Impressão do labirinto gerado e posições `S` e `G`.
-- Gráficos comparativos: tempo de execução (BFS vs DFS) e uso de memória (BFS vs DFS).
-- Mensagens de resumo indicando qual algoritmo teve desempenho inferior nas medições realizadas.
-
-**Dependências**
-- `matplotlib` (definida em `requirements.txt`).
-
-**Observações**
-- O notebook inclui medição de memória e coleta de lixo (`gc.collect()`) antes de rastrear memória para reduzir ruído nas medições.
-- Os vizinhos consideram movimentos diagonais; se desejar comportamento somente ortogonal, ajuste a função `neighbors`.
-
-Se quiser, eu posso:
-- Extrair o código do notebook para um script `benchmarks.py` executável.
-- Adicionar instruções para gerar resultados reproduzíveis (seed, parâmetros de repetição).
+Se quiser, aplico uma dessas melhorias — qual prefere que eu adicione primeiro?

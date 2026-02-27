@@ -11,7 +11,7 @@ Este repositório contém notebooks que geram labirintos aleatórios e comparam 
 	- converte valores para `float` antes de normalizar para evitar erros com strings formatadas.
 
 **Arquivos principais**
-- `Homework - Answer/Atividade_IA_Labirinto.ipynb`: Notebook principal com geração de labirintos, medições e gráficos (contém as melhorias de plot descritas acima).
+- `Homework - Answer/homework.ipynb`: Notebook principal com geração de labirintos, medições e gráficos (contém as melhorias de plot descritas acima).
 - `requirements.txt`: Dependências mínimas para executar os notebooks.
 
 **Visão geral — fluxo do notebook**
@@ -44,8 +44,8 @@ jupyter lab
 
 3. Alternativa — converter para script e executar:
 ```bash
-jupyter nbconvert --to script "Homework - Answer/Atividade_IA_Labirinto.ipynb"
-python "Homework - Answer/Atividade_IA_Labirinto.py"
+jupyter nbconvert --to script "Homework - Answer/homework.ipynb"
+python "Homework - Answer/homework.py"
 ```
 
 **Notas sobre plots e dados**
